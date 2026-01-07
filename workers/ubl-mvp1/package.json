@@ -1,0 +1,34 @@
+{
+  "name": "ubl-mvp1",
+  "version": "1.0.0",
+  "description": "UBL MVP-1 - Universal Business Ledger on Cloudflare",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "db:migrate": "wrangler d1 execute ubl_ledger --file=./schema.sql",
+    "db:migrate:local": "wrangler d1 execute ubl_ledger --file=./schema.sql --local",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240117.0",
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.0",
+    "vitest": "^1.2.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

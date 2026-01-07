@@ -1,0 +1,79 @@
+# UBL MVP-1 Worker Configuration
+# Universal Business Ledger - Cloudflare Worker
+
+name = "ubl-mvp1"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Durable Objects
+[durable_objects]
+bindings = [
+  { name = "TENANT_OBJECT", class_name = "TenantObject" },
+  { name = "ROOM_OBJECT", class_name = "RoomObject" },
+  { name = "LEDGER_SHARD_OBJECT", class_name = "LedgerShardObject" },
+  { name = "WORKSPACE_OBJECT", class_name = "WorkspaceObject" }
+]
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["TenantObject", "RoomObject", "LedgerShardObject", "WorkspaceObject"]
+
+# D1 Database binding (update database_id after creation)
+[[d1_databases]]
+binding = "D1_LEDGER"
+database_name = "ubl_ledger"
+database_id = "YOUR_DATABASE_ID_HERE"
+
+# R2 Bucket binding (update bucket_name after creation)
+[[r2_buckets]]
+binding = "R2_LEDGER"
+bucket_name = "ubl-ledger"
+
+# KV Namespace for policies and cache
+[[kv_namespaces]]
+binding = "KV_POLICIES"
+id = "YOUR_KV_ID_HERE"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+LOG_LEVEL = "debug"
+MAX_MESSAGE_BYTES = "8000"
+HOT_MESSAGES_LIMIT = "500"
+HOT_ATOMS_LIMIT = "2000"
+SEEN_LIMIT = "2000"
+KEEPALIVE_INTERVAL_MS = "15000"
+
+# Staging environment
+[env.staging]
+name = "ubl-mvp1-staging"
+[env.staging.vars]
+ENVIRONMENT = "staging"
+LOG_LEVEL = "info"
+
+# Production environment
+[env.production]
+name = "ubl-mvp1-production"
+[env.production.vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "warn"
+
+# Routes (update with your domain)
+# [[routes]]
+# pattern = "ubl.yourdomain.com/*"
+# zone_name = "yourdomain.com"
+
+# Observability
+[observability]
+enabled = true
+
+# Build settings
+[build]
+command = ""
