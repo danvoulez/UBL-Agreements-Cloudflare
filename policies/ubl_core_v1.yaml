@@ -1,0 +1,245 @@
+# UBL Core Policy v1
+# This policy defines the core access control rules for UBL MVP-1.
+#
+# Agreement-first philosophy: Every action references an Agreement.
+# Container primitive: Rooms, Workspaces, Wallets are all Containers.
+
+---
+id: ubl-core-v1
+version: "1.0.0"
+name: UBL Core Policy
+description: |
+  Core access control policy for UBL MVP-1.
+  Implements role-based access control with Agreement-first semantics.
+
+combining_algorithm: deny_overrides
+default_effect: deny
+
+rules:
+  # ==========================================================================
+  # Tenant Access Rules
+  # ==========================================================================
+
+  - id: tenant-owner-full-access
+    description: Tenant owners have full access to all resources
+    effect: allow
+    conditions:
+      - field: role
+        operator: equals
+        value: owner
+    priority: 100
+
+  - id: tenant-admin-manage
+    description: Admins can manage most tenant resources
+    effect: allow
+    conditions:
+      - field: role
+        operator: equals
+        value: admin
+      - field: action.action_type
+        operator: in
+        value: [read, write, create, execute]
+    priority: 90
+
+  # ==========================================================================
+  # Room Access Rules
+  # ==========================================================================
+
+  - id: room-member-read
+    description: Room members can read messages
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: room
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_type
+        operator: equals
+        value: read
+    priority: 50
+
+  - id: room-member-write
+    description: Room members can send messages
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: room
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_type
+        operator: equals
+        value: write
+    priority: 50
+
+  - id: room-member-send-message
+    description: Room members can send messages (specific action)
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: room
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_name
+        operator: equals
+        value: messenger.send
+    priority: 60
+
+  # ==========================================================================
+  # Workspace/Document Access Rules
+  # ==========================================================================
+
+  - id: workspace-member-read
+    description: Workspace members can read documents
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: in
+        value: [workspace, document]
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_type
+        operator: equals
+        value: read
+    priority: 50
+
+  - id: workspace-member-create
+    description: Workspace members can create documents
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: workspace
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_type
+        operator: equals
+        value: create
+    priority: 50
+
+  - id: workspace-llm-complete
+    description: Workspace members can use LLM completion
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: workspace
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+      - field: action.action_name
+        operator: equals
+        value: office.llm.complete
+    priority: 60
+
+  # ==========================================================================
+  # MCP Tool Access Rules
+  # ==========================================================================
+
+  - id: mcp-messenger-tools
+    description: Allow messenger tools for authenticated users
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: tool
+      - field: action.action_name
+        operator: starts_with
+        value: messenger.
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+    priority: 70
+
+  - id: mcp-office-tools
+    description: Allow office tools for authenticated users
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: tool
+      - field: action.action_name
+        operator: starts_with
+        value: office.
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+    priority: 70
+
+  # ==========================================================================
+  # Receipt Access Rules
+  # ==========================================================================
+
+  - id: receipt-read
+    description: Authenticated users can read receipts
+    effect: allow
+    conditions:
+      - field: resource.resource_type
+        operator: equals
+        value: receipt
+      - field: action.action_type
+        operator: equals
+        value: read
+      - field: role
+        operator: in
+        value: [member, admin, owner]
+    priority: 40
+
+  # ==========================================================================
+  # Service Account Rules
+  # ==========================================================================
+
+  - id: service-account-execute
+    description: Service accounts can execute tools
+    effect: allow
+    conditions:
+      - field: identity.is_service
+        operator: equals
+        value: true
+      - field: action.action_type
+        operator: equals
+        value: execute
+    priority: 80
+
+  # ==========================================================================
+  # Deny Rules
+  # ==========================================================================
+
+  - id: deny-guest-write
+    description: Guests cannot write
+    effect: deny
+    conditions:
+      - field: role
+        operator: equals
+        value: guest
+      - field: action.action_type
+        operator: in
+        value: [write, create, delete, admin]
+    priority: 200
+
+  - id: deny-delete-without-admin
+    description: Only admins and owners can delete
+    effect: deny
+    conditions:
+      - field: action.action_type
+        operator: equals
+        value: delete
+      - field: role
+        operator: not_in
+        value: [admin, owner]
+    priority: 200
+
+metadata:
+  author: UBL Team
+  created_at: "2026-01-07"
+  tags:
+    - core
+    - mvp-1
+    - access-control
